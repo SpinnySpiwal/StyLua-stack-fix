@@ -427,17 +427,22 @@ pub fn format_code(
     range: Option<Range>,
     verify_output: OutputVerification,
 ) -> Result<String, Error> {
-    let input_ast = match full_moon::parse(code) {
-        Ok(ast) => ast,
-        Err(error) => {
-            return Err(Error::ParseError(error));
-        }
-    };
+    let code_copy = code.to_string();
+    let handle = thread::Builder::new().stack_size(100_000 * 0xFF).spawn(move || {
+        let input_ast = match full_moon::parse(&code_copy) {
+            Ok(ast) => ast,
+            Err(error) => {
+                return Err(Error::ParseError(error));
+            }
+        };
 
-    let ast = format_ast(input_ast, config, range, verify_output)?;
-    let output = full_moon::print(&ast);
+        let ast = format_ast(input_ast, config, range, verify_output)?;
+        let output = full_moon::print(&ast);
 
-    Ok(output)
+        Ok(output)
+    });
+
+    handle.unwrap().join().unwrap()
 }
 
 #[cfg(all(target_arch = "wasm32", feature = "wasm-bindgen"))]
