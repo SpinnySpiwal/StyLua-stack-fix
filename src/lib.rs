@@ -2,6 +2,7 @@ use context::Context;
 use full_moon::ast::Ast;
 use serde::Deserialize;
 use thiserror::Error;
+use std::thread;
 #[cfg(all(target_arch = "wasm32", feature = "wasm-bindgen"))]
 use wasm_bindgen::prelude::*;
 
